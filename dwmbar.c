@@ -147,8 +147,10 @@ static void getkblayout(void)
     free(names_r);
 }
 
-static void *thread_kblayout(void *arg __attribute__((unused)))
+static void *thread_kblayout(void *arg)
 {
+    (void)arg;
+
     xcb_xkb_select_events(c, XCB_XKB_ID_USE_CORE_KBD,
                           XCB_XKB_EVENT_TYPE_STATE_NOTIFY |
                               XCB_XKB_EVENT_TYPE_INDICATOR_STATE_NOTIFY,
@@ -226,8 +228,10 @@ static void getvolume(void)
     sprintf(volume, "%d%%%s", percentage, active ? "" : "M");
 }
 
-static void *thread_volume(void *arg __attribute__((unused)))
+static void *thread_volume(void *arg)
 {
+    (void)arg;
+
     snd_ctl_t *ctl;
     struct pollfd pfds;
     snd_ctl_event_t *event;
@@ -303,7 +307,7 @@ static void read_str_of_file(const char *filename, char *s, size_t n)
         *s = '\0';
 }
 
-int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
+int main(void)
 {
     xcb_xkb_use_extension_cookie_t extension_c;
     xcb_xkb_use_extension_reply_t *extension_r;
