@@ -19,18 +19,18 @@ gcc -O2 -s -lpthread -lxcb -lxcb-xkb -lasound -lm -o dwmbar dwmbar.c
 #endif
 #endif
 
-#include <pthread.h>
 #include <ctype.h>
 #include <locale.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <time.h>
-#include <math.h>
+#include <fcntl.h>
+#include <pthread.h>
+#include <unistd.h>
 #include <alsa/asoundlib.h>
-#include <xcb/xcb.h>
 #include <xcb/xkb.h>
+#include <xcb/xcb.h>
 
 #define IFACE "wlp3s0"
 #define BATTERY "BAT0"
