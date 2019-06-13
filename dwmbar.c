@@ -40,9 +40,9 @@ gcc -O2 -s -lpthread -lxcb -lxcb-xkb -lasound -lm -o dwmbar dwmbar.c
 #define PATH_LNK "/sys/class/net/" IFACE "/operstate"
 #define PATH_CAPACITY "/sys/class/power_supply/" BATTERY "/capacity"
 #define DATETIME_FORMAT "  %Y-%m-%d %a %H:%M"
-#define SLEEP_SEC 10
+#define SLEEP_SEC 5
 #define SLEEP_1 2  /* SLEEP_SEC * SLEEP_1 */
-#define SLEEP_2 12 /* SLEEP_SEC * SLEEP_2 */
+#define SLEEP_2 24 /* SLEEP_SEC * SLEEP_2 */
 #define KBLAYOUT_NUM_CHARS 3
 #define NUMLOCK_SZ " NL"
 
@@ -238,8 +238,7 @@ static void *thread_volume(void *arg)
 
     snd_ctl_event_malloc(&event);
 
-reinitialize:
-
+initialize:
     if (snd_ctl_open(&ctl, SND_CTL_NAME, SND_CTL_READONLY) < 0)
     {
         snd_ctl_event_free(event);
@@ -270,7 +269,7 @@ reinitialize:
             snd_ctl_subscribe_events(ctl, 0);
             snd_ctl_close(ctl);
             snd_config_update_free_global();
-            goto reinitialize;
+            goto initialize;
         }
 
         if (snd_ctl_event_get_type(event) == SND_CTL_EVENT_ELEM &&
@@ -289,34 +288,18 @@ reinitialize:
     return NULL;
 }
 
-/* reading file and truncate newline */
-static void read_str_of_file(const char *filename, char *s, size_t n)
-{
-    int fd = open(filename, O_RDONLY);
-    if (fd != -1)
-    {
-        ssize_t nr;
-        if ((nr = read(fd, s, n)) > 0)
-            /* truncate newline */
-            *(s + --nr) = '\0';
-        else
-            *s = '\0';
-        close(fd);
-    }
-    else
-        *s = '\0';
-}
-
 int main(void)
 {
     xcb_xkb_use_extension_cookie_t extension_c;
     xcb_xkb_use_extension_reply_t *extension_r;
     pthread_attr_t pthread_attr;
     pthread_t pthread;
+    int fd;
+    ssize_t nr;
     time_t timer;
     struct tm tp;
-    struct timespec ts = {SLEEP_SEC, 0};
-    size_t count_1 = 1, count_2 = 1;
+    struct timespec ts;
+    size_t count_1, count_2;
 
     /* setlocale(LC_TIME, "ru_RU.UTF-8"); */
 
@@ -344,21 +327,52 @@ int main(void)
     }
     free(extension_r);
 
+    ts.tv_sec = SLEEP_SEC;
+    ts.tv_nsec = 0;
+
+    count_1 = 1;
+    count_2 = 1;
+
     for (;; nanosleep(&ts, NULL))
     {
         if (!(--count_1))
         {
             count_1 = SLEEP_1;
-            read_str_of_file(PATH_LNK, lnk, sizeof lnk);
+
+            if ((fd = open(PATH_LNK, O_RDONLY)) != -1)
+            {
+                if ((nr = read(fd, lnk, sizeof lnk)) > 0)
+                    /* truncate newline */
+                    lnk[--nr] = '\0';
+                else
+                    lnk[0] = '\0';
+                close(fd);
+            }
+            else
+                lnk[0] = '\0';
         }
+
         if (!(--count_2))
         {
             count_2 = SLEEP_2;
-            read_str_of_file(PATH_CAPACITY, capacity, sizeof capacity);
+
+            if ((fd = open(PATH_CAPACITY, O_RDONLY)) != -1)
+            {
+                if ((nr = read(fd, capacity, sizeof capacity)) > 0)
+                    /* truncate newline */
+                    capacity[--nr] = '\0';
+                else
+                    capacity[0] = '\0';
+                close(fd);
+            }
+            else
+                capacity[0] = '\0';
         }
+
         timer = time(NULL);
         localtime_r(&timer, &tp);
         strftime(datetime, sizeof datetime, DATETIME_FORMAT, &tp);
+
         settitle();
     }
 
