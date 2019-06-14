@@ -295,7 +295,7 @@ int main(void)
     pthread_attr_t pthread_attr;
     pthread_t pthread;
     int fd;
-    ssize_t nr;
+    ssize_t n;
     time_t timer;
     struct tm tp;
     struct timespec ts;
@@ -341,9 +341,9 @@ int main(void)
 
             if ((fd = open(PATH_LNK, O_RDONLY)) != -1)
             {
-                if ((nr = read(fd, lnk, sizeof lnk)) > 0)
+                if ((n = read(fd, lnk, sizeof lnk)) > 0)
                     /* truncate newline */
-                    lnk[--nr] = '\0';
+                    lnk[--n] = '\0';
                 else
                     lnk[0] = '\0';
                 close(fd);
@@ -358,9 +358,9 @@ int main(void)
 
             if ((fd = open(PATH_CAPACITY, O_RDONLY)) != -1)
             {
-                if ((nr = read(fd, capacity, sizeof capacity)) > 0)
+                if ((n = read(fd, capacity, sizeof capacity)) > 0)
                     /* truncate newline */
-                    capacity[--nr] = '\0';
+                    capacity[--n] = '\0';
                 else
                     capacity[0] = '\0';
                 close(fd);
