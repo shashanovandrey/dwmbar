@@ -294,10 +294,6 @@ int main(void)
     xcb_xkb_use_extension_reply_t *extension_r;
     pthread_attr_t pthread_attr;
     pthread_t pthread;
-    int fd;
-    ssize_t n;
-    time_t timer;
-    struct tm tp;
     struct timespec ts;
     size_t count_1, count_2;
 
@@ -335,6 +331,11 @@ int main(void)
 
     for (;; nanosleep(&ts, NULL))
     {
+        int fd;
+        ssize_t n;
+        time_t timer;
+        struct tm tp;
+
         if (!(--count_1))
         {
             count_1 = SLEEP_1;
