@@ -25,6 +25,7 @@ gcc -O2 -s -lpthread -lxcb -lxcb-xkb -lasound -lm -o dwmbar dwmbar.c
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <alloca.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -200,11 +201,10 @@ static void getvolume(void)
     snd_mixer_selem_register(mixer, NULL, NULL);
     snd_mixer_load(mixer);
 
-    snd_mixer_selem_id_malloc(&sid);
+    sid = (snd_mixer_selem_id_t *)alloca(snd_mixer_selem_id_sizeof());
     snd_mixer_selem_id_set_index(sid, 0);
     snd_mixer_selem_id_set_name(sid, MIXER_PART_NAME);
     elem = snd_mixer_find_selem(mixer, sid);
-    snd_mixer_selem_id_free(sid);
     if (elem == NULL)
     {
         snd_mixer_close(mixer);
@@ -236,12 +236,11 @@ static void *thread_volume(void *arg)
     struct pollfd pfds;
     snd_ctl_event_t *event;
 
-    snd_ctl_event_malloc(&event);
+    event = (snd_ctl_event_t *)alloca(snd_ctl_event_sizeof());
 
 initialize:
     if (snd_ctl_open(&ctl, SND_CTL_NAME, SND_CTL_READONLY) < 0)
     {
-        snd_ctl_event_free(event);
         volume[0] = '\0';
         settitle();
         return NULL;
@@ -250,7 +249,6 @@ initialize:
     if (snd_ctl_subscribe_events(ctl, 1) < 0)
     {
         snd_ctl_close(ctl);
-        snd_ctl_event_free(event);
         volume[0] = '\0';
         settitle();
         return NULL;
@@ -283,7 +281,6 @@ initialize:
     /* code will never be executed */
     snd_ctl_subscribe_events(ctl, 0);
     snd_ctl_close(ctl);
-    snd_ctl_event_free(event);
     snd_config_update_free_global();
     return NULL;
 }
